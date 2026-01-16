@@ -1,0 +1,186 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  CASHIER
+}
+
+enum MovementType {
+  ENTRY
+  TRANSFER
+  SALE
+  WASTE
+}
+
+enum Currency {
+  CUP
+  USD
+  MLC
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  password  String
+  role      Role      @default(CASHIER)
+  name      String
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id              String           @id @default(uuid())
+  name            String
+  description     String?
+  category        String?
+  unit            String           @default("unit")
+  costPrice       Float            @default(0) // Average Cost (WAC)
+  sellingPriceCUP Float            @default(0)
+  deletedAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  warehouseStock  WarehouseStock[]
+  posStock        POSStock[]
+  movements       StockMovement[]
+  saleItems       SaleItem[]
+}
+
+model Warehouse {
+  id        String           @id @default(uuid())
+  name      String
+  location  String?
+  stocks    WarehouseStock[]
+  deletedAt DateTime?
+  createdAt DateTime         @default(now())
+}
+
+model PointOfSale {
+  id        String     @id @default(uuid())
+  name      String
+  location  String?
+  stocks     POSStock[]
+  sales     Sale[]
+  deletedAt DateTime?
+  createdAt DateTime   @default(now())
+}
+
+model WarehouseStock {
+  id          String    @id @default(uuid())
+  productId   String
+  warehouseId String
+  quantity    Float     @default(0)
+  product     Product   @relation(fields: [productId], references: [id])
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@unique([productId, warehouseId])
+}
+
+model POSStock {
+  id          String      @id @default(uuid())
+  productId   String
+  posId       String
+  quantity    Float       @default(0)
+  product     Product     @relation(fields: [productId], references: [id])
+  pointOfSale PointOfSale @relation(fields: [posId], references: [id])
+
+  @@unique([productId, posId])
+}
+
+model StockMovement {
+  id             String       @id @default(uuid())
+  productId      String
+  type           MovementType
+  fromLocationId String? // Warehouse ID or POS ID depending on type
+  toLocationId   String? // Warehouse ID or POS ID depending on type
+  quantity       Float
+  costAtMoment   Float
+  rateAtMoment   Float        @default(1)
+  createdAt      DateTime     @default(now())
+  product        Product      @relation(fields: [productId], references: [id])
+}
+
+model CurrencyRate {
+  id        String   @id @default(uuid())
+  currency  Currency
+  rate      Float
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+model Customer {
+  id        String    @id @default(uuid())
+  name      String
+  phone     String?
+  email     String?
+  debts     Debt[]
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model Debt {
+  id           String        @id @default(uuid())
+  customerId   String
+  amount       Float
+  currency     Currency      @default(CUP)
+  rateAtMoment Float
+  saleId       String?       @unique
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  sale         Sale?         @relation(fields: [saleId], references: [id])
+  payments     DebtPayment[]
+  deletedAt    DateTime?
+  createdAt    DateTime      @default(now())
+}
+
+model DebtPayment {
+  id           String   @id @default(uuid())
+  debtId       String
+  amount       Float
+  currency     Currency @default(CUP)
+  rateAtMoment Float
+  createdAt    DateTime @default(now())
+  debt         Debt     @relation(fields: [debtId], references: [id])
+}
+
+model Sale {
+  id           String     @id @default(uuid())
+  posId        String
+  totalCUP     Float      @default(0)
+  totalUSD     Float      @default(0)
+  totalMLC     Float      @default(0)
+  rateAtMoment Float
+  pointOfSale  PointOfSale @relation(fields: [posId], references: [id])
+  items        SaleItem[]
+  debt         Debt?
+  deletedAt    DateTime?
+  createdAt    DateTime   @default(now())
+}
+
+model SaleItem {
+  id           String   @id @default(uuid())
+  saleId       String
+  productId    String
+  quantity     Float
+  price        Float
+  costAtMoment Float
+  sale         Sale     @relation(fields: [saleId], references: [id])
+  product      Product  @relation(fields: [productId], references: [id])
+}
+
+model Expense {
+  id             String    @id @default(uuid())
+  description    String
+  amount         Float
+  currency       Currency  @default(CUP)
+  category       String
+  isOnatPayment  Boolean   @default(false)
+  deletedAt      DateTime?
+  createdAt      DateTime  @default(now())
+}
