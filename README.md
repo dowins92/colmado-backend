@@ -1,98 +1,206 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Colmado Back - Sistema Contable Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Backend API para el Sistema Contable de Colmado, construido con NestJS, Prisma y PostgreSQL/MySQL.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🚀 Características
 
-## Description
+- **Autenticación JWT** - Sistema de autenticación seguro con tokens JWT
+- **Control de Roles** - Sistema de permisos (OWNER, MANAGER, CASHIER)
+- **Gestión de Productos** - CRUD completo de productos e inventario
+- **Punto de Venta** - Procesamiento de ventas con múltiples monedas
+- **Control de Stock** - Movimientos de inventario entre almacenes y puntos de venta
+- **Gestión de Clientes** - Administración de clientes y deudas
+- **Finanzas** - Reportes diarios, gastos y tasas de cambio
+- **API REST** - Documentación automática con Swagger
+- **CORS Configurado** - Habilitado para el frontend Angular
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 📋 Requisitos Previos
 
-## Project setup
+- Node.js 18+ 
+- npm o yarn
+- PostgreSQL o MySQL
+- Git
 
+## 🔧 Instalación
+
+1. Clonar el repositorio:
 ```bash
-$ npm install
+git clone <URL_DEL_REPOSITORIO>
+cd Colmado-Back
 ```
 
-## Compile and run the project
-
+2. Instalar dependencias:
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm install
 ```
 
-## Run tests
-
+3. Configurar variables de entorno:
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Crear archivo .env
+cp .env.example .env
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+Editar `.env` con tus credenciales:
+```env
+DATABASE_URL="postgresql://usuario:contraseña@localhost:5432/colmado_db"
+JWT_SECRET="tu_secreto_jwt_seguro"
+PORT=3000
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+4. Configurar la base de datos con Prisma:
+```bash
+# Generar cliente de Prisma
+npx prisma generate
 
-## Resources
+# Ejecutar migraciones
+npx prisma migrate dev
 
-Check out a few resources that may come in handy when working with NestJS:
+# (Opcional) Sembrar datos iniciales
+npx prisma db seed
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## 🏃‍♂️ Ejecutar la Aplicación
 
-## Support
+```bash
+# Modo desarrollo con hot-reload
+npm run start:dev
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Modo producción
+npm run build
+npm run start:prod
+```
 
-## Stay in touch
+La API estará disponible en `http://localhost:3000`
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 📚 Documentación API
 
-## License
+Una vez la aplicación esté corriendo, visita la documentación interactiva de Swagger:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```
+http://localhost:3000/api
+```
+
+## 🔐 Endpoints Principales
+
+### Autenticación
+- `POST /auth/login` - Iniciar sesión y obtener token JWT
+- `GET /auth/profile` - Obtener perfil del usuario autenticado
+
+### Productos
+- `GET /products` - Listar todos los productos
+- `POST /products` - Crear nuevo producto
+- `GET /products/:id` - Obtener producto por ID
+- `PATCH /products/:id` - Actualizar producto
+- `DELETE /products/:id` - Eliminar producto (soft delete)
+
+### Ventas
+- `POST /sales/bulk` - Procesar venta con múltiples items
+- `GET /sales` - Historial de ventas
+- `GET /sales/:id` - Detalle de venta
+
+### Clientes
+- `GET /customers` - Listar clientes
+- `POST /customers` - Crear cliente
+- `PATCH /customers/:id` - Actualizar cliente
+- `DELETE /customers/:id` - Eliminar cliente
+
+### Stock
+- `POST /stock/entry` - Entrada de inventario
+- `POST /stock/transfer` - Transferencia entre ubicaciones
+- `GET /stock/available` - Stock disponible por producto
+- `GET /stock/movements` - Historial de movimientos
+
+### Finanzas
+- `POST /finance/expense` - Registrar gasto
+- `POST /finance/rate` - Establecer tasa de cambio
+- `GET /finance/daily-summary` - Resumen financiero diario
+
+Ver documentación completa en Swagger: `/api`
+
+## 🗄️ Estructura del Proyecto
+
+```
+src/
+├── auth/              # Módulo de autenticación
+├── customers/         # Gestión de clientes
+├── debts/            # Control de deudas
+├── finance/          # Módulo financiero
+├── point-of-sale/    # Puntos de venta
+├── prisma/           # Configuración de Prisma
+├── products/         # Gestión de productos
+├── sales/            # Procesamiento de ventas
+├── stock/            # Control de inventario
+├── users/            # Gestión de usuarios
+├── warehouses/       # Gestión de almacenes
+├── app.module.ts     # Módulo principal
+└── main.ts           # Punto de entrada
+```
+
+## 🧪 Pruebas
+
+```bash
+# Pruebas unitarias
+npm run test
+
+# Pruebas e2e
+npm run test:e2e
+
+# Cobertura de código
+npm run test:cov
+```
+
+## 🛠️ Tecnologías Utilizadas
+
+- **NestJS** - Framework de Node.js
+- **Prisma** - ORM moderno para TypeScript
+- **PostgreSQL/MySQL** - Base de datos relacional
+- **JWT** - Autenticación con tokens
+- **Swagger** - Documentación automática de API
+- **TypeScript** - Tipado estático
+
+## 🔒 Seguridad
+
+- Autenticación JWT obligatoria en todos los endpoints (excepto login)
+- Encriptación de contraseñas con bcrypt
+- Control de acceso basado en roles
+- CORS configurado para dominios permitidos
+- Validación de datos con class-validator
+- Soft delete para prevenir pérdida de datos
+
+## 📝 Variables de Entorno
+
+Crear archivo `.env` en la raíz del proyecto:
+
+```env
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/colmado_db"
+
+# JWT
+JWT_SECRET="your-super-secret-jwt-key-change-this"
+
+# Application
+PORT=3000
+NODE_ENV=development
+```
+
+## 🤝 Contribuir
+
+1. Fork el proyecto
+2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abrir un Pull Request
+
+## 📄 Licencia
+
+Este proyecto es privado y está protegido por derechos de autor.
+
+## 👥 Autor
+
+Tu Nombre - [@tu_twitter](https://twitter.com/tu_twitter)
+
+## 🙏 Agradecimientos
+
+- NestJS por el excelente framework
+- Prisma por el ORM intuitivo
+- La comunidad de TypeScript
