@@ -26,9 +26,9 @@ export class BulkSaleDto {
     @Type(() => SaleItemDto)
     items: SaleItemDto[];
 
-    @IsEnum(Currency)
+    @IsString()
     @IsNotEmpty()
-    currency: Currency;
+    currency: string;
 
     @IsNumber()
     @IsNotEmpty()

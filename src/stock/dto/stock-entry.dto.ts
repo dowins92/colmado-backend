@@ -18,9 +18,9 @@ export class StockEntryDto {
     @IsNotEmpty()
     totalCost: number;
 
-    @IsEnum(Currency)
+    @IsString()
     @IsNotEmpty()
-    currency: Currency;
+    currencyCode: string;
 
     @IsNumber()
     @IsNotEmpty()

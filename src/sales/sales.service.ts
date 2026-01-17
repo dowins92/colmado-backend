@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BulkSaleDto } from './dto/bulk-sale.dto';
-import { MovementType, Currency } from '@prisma/client';
+import { MovementType } from '@prisma/client';
 
 @Injectable()
 export class SalesService {
@@ -39,9 +39,9 @@ export class SalesService {
                 });
 
                 const lineTotal = item.quantity * item.price;
-                if (currency === Currency.CUP) totalCUP += lineTotal;
-                if (currency === Currency.USD) totalUSD += lineTotal;
-                if (currency === Currency.MLC) totalMLC += lineTotal;
+                if (currency === 'CUP') totalCUP += lineTotal;
+                if (currency === 'USD') totalUSD += lineTotal;
+                if (currency === 'MLC') totalMLC += lineTotal;
 
                 saleItemsData.push({
                     productId: item.productId,
@@ -79,15 +79,18 @@ export class SalesService {
 
             // 3. Handle "El Fiao" (Debt)
             if (customerId) {
-                const totalAmount = currency === Currency.CUP ? totalCUP : (currency === Currency.USD ? totalUSD : totalMLC);
+                const totalAmount = currency === 'CUP' ? totalCUP : (currency === 'USD' ? totalUSD : totalMLC);
                 const debtAmount = totalAmount - (paidAmount ?? totalAmount);
 
                 if (debtAmount > 0) {
+                    const dbCurrency = await tx.currency.findUnique({ where: { code: currency } });
+                    if (!dbCurrency) throw new BadRequestException(`Currency ${currency} not found`);
+
                     await tx.debt.create({
                         data: {
                             customerId,
                             amount: debtAmount,
-                            currency,
+                            currencyId: dbCurrency.id,
                             rateAtMoment: rate,
                             saleId: sale.id,
                         },

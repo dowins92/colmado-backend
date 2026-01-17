@@ -12,10 +12,10 @@ export class CreateDebtDto {
     @Min(0)
     amount: number;
 
-    @ApiProperty({ enum: Currency, default: Currency.CUP })
-    @IsEnum(Currency)
+    @ApiProperty({ example: 'USD' })
+    @IsString()
     @IsOptional()
-    currency?: Currency;
+    currencyCode?: string;
 
     @ApiProperty()
     @IsNumber()

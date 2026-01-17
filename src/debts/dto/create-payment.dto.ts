@@ -12,9 +12,9 @@ export class CreatePaymentDto {
     @Min(0)
     amount: number;
 
-    @ApiProperty({ enum: Currency, default: Currency.CUP })
-    @IsEnum(Currency)
-    currency: Currency;
+    @ApiProperty({ example: 'CUP' })
+    @IsString()
+    currencyCode: string;
 
     @ApiProperty()
     @IsNumber()

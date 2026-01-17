@@ -9,7 +9,7 @@ export class StockService {
     constructor(private prisma: PrismaService) { }
 
     async entry(dto: StockEntryDto) {
-        const { productId, warehouseId, quantity, totalCost, rate } = dto;
+        const { productId, warehouseId, quantity, totalCost, rate, currencyCode } = dto;
         const costPrice = quantity > 0 ? totalCost / quantity : 0;
 
         return this.prisma.$transaction(async (tx) => {

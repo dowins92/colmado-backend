@@ -8,22 +8,52 @@ export class DebtsService {
     constructor(private prisma: PrismaService) { }
 
     async create(createDebtDto: CreateDebtDto) {
+        const { currencyCode, ...data } = createDebtDto;
+
+        // Default to CUP if no currencyCode provided
+        const code = (currencyCode || 'CUP').toUpperCase();
+
+        const currency = await this.prisma.currency.findUnique({
+            where: { code },
+        });
+
+        if (!currency) {
+            throw new NotFoundException(`Currency ${code} not found`);
+        }
+
         return this.prisma.debt.create({
-            data: createDebtDto,
+            data: {
+                ...data,
+                currencyId: currency.id,
+            },
         });
     }
 
     async createPayment(createPaymentDto: CreatePaymentDto) {
+        const { currencyCode, debtId, ...data } = createPaymentDto;
+
         const debt = await this.prisma.debt.findUnique({
-            where: { id: createPaymentDto.debtId },
+            where: { id: debtId },
         });
 
         if (!debt) {
-            throw new NotFoundException(`Debt with ID ${createPaymentDto.debtId} not found`);
+            throw new NotFoundException(`Debt with ID ${debtId} not found`);
+        }
+
+        const currency = await this.prisma.currency.findUnique({
+            where: { code: currencyCode.toUpperCase() },
+        });
+
+        if (!currency) {
+            throw new NotFoundException(`Currency ${currencyCode} not found`);
         }
 
         return this.prisma.debtPayment.create({
-            data: createPaymentDto,
+            data: {
+                ...data,
+                debtId,
+                currencyId: currency.id,
+            },
         });
     }
 
