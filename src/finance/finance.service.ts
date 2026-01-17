@@ -6,9 +6,9 @@ import { ExpenseDto, CurrencyRateDto } from './dto/finance.dto';
 export class FinanceService {
     constructor(private prisma: PrismaService) { }
 
-    async createExpense(dto: ExpenseDto) {
-        const currency = await this.prisma.currency.findUnique({
-            where: { code: dto.currencyCode },
+    async createExpense(dto: ExpenseDto, businessId: string) {
+        const currency = await this.prisma.currency.findFirst({
+            where: { code: dto.currencyCode, businessId },
         });
 
         if (!currency) {
@@ -20,13 +20,14 @@ export class FinanceService {
             data: {
                 ...data,
                 currencyId: currency.id,
+                businessId,
             },
         });
     }
 
-    async createCurrencyRate(dto: CurrencyRateDto) {
-        const currency = await this.prisma.currency.findUnique({
-            where: { code: dto.currencyCode },
+    async createCurrencyRate(dto: CurrencyRateDto, businessId: string) {
+        const currency = await this.prisma.currency.findFirst({
+            where: { code: dto.currencyCode, businessId },
         });
 
         if (!currency) {

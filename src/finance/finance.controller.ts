@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { FinanceService } from './finance.service';
 import { ExpenseDto, CurrencyRateDto } from './dto/finance.dto';
@@ -13,14 +13,14 @@ export class FinanceController {
 
     @Post('expense')
     @Roles(Role.OWNER, Role.MANAGER)
-    async createExpense(@Body() dto: ExpenseDto) {
-        return this.financeService.createExpense(dto);
+    async createExpense(@Body() dto: ExpenseDto, @Request() req: any) {
+        return this.financeService.createExpense(dto, req.businessId);
     }
 
     @Post('rate')
     @Roles(Role.OWNER)
-    async createRate(@Body() dto: CurrencyRateDto) {
-        return this.financeService.createCurrencyRate(dto);
+    async createRate(@Body() dto: CurrencyRateDto, @Request() req: any) {
+        return this.financeService.createCurrencyRate(dto, req.businessId);
     }
 
     @Get('daily-summary')

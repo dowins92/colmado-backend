@@ -14,11 +14,13 @@ import { CustomersModule } from './customers/customers.module';
 import { DebtsModule } from './debts/debts.module';
 import { UsersModule } from './users/users.module';
 import { CurrenciesModule } from './currencies/currencies.module';
+import { BusinessModule } from './business/business.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { RolesGuard } from './auth/roles.guard';
+import { BusinessGuard } from './auth/business.guard';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ProductsModule, StockModule, SalesModule, FinanceModule, WarehousesModule, PointOfSaleModule, CustomersModule, DebtsModule, UsersModule, CurrenciesModule],
+  imports: [PrismaModule, AuthModule, ProductsModule, StockModule, SalesModule, FinanceModule, WarehousesModule, PointOfSaleModule, CustomersModule, DebtsModule, UsersModule, CurrenciesModule, BusinessModule],
   controllers: [AppController],
   providers: [
     AppService,
@@ -29,6 +31,10 @@ import { RolesGuard } from './auth/roles.guard';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: BusinessGuard,
     },
   ],
 })

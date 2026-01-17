@@ -40,4 +40,13 @@ export class CreateUserDto {
     @IsString()
     @IsOptional()
     posId?: string;
+
+    @ApiProperty({ required: false, type: [String] })
+    @IsOptional()
+    businessIds?: string[];
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    mainBusinessId?: string;
 }

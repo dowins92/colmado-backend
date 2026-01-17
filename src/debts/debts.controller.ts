@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Request } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { DebtsService } from './debts.service';
 import { CreateDebtDto } from './dto/create-debt.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { Roles } from '../auth/roles.decorator';
+import { Role } from '@prisma/client';
 
 @ApiTags('debts')
 @ApiBearerAuth()
@@ -11,12 +13,14 @@ export class DebtsController {
     constructor(private readonly debtsService: DebtsService) { }
 
     @Post()
+    @Roles(Role.OWNER, Role.MANAGER)
     @ApiOperation({ summary: 'Create a new debt' })
-    create(@Body() createDebtDto: CreateDebtDto) {
-        return this.debtsService.create(createDebtDto);
+    create(@Body() createDebtDto: CreateDebtDto, @Request() req: any) {
+        return this.debtsService.create(createDebtDto, req.businessId);
     }
 
     @Post('payment')
+    @Roles(Role.OWNER, Role.MANAGER, Role.CASHIER)
     @ApiOperation({ summary: 'Record a payment for a debt' })
     createPayment(@Body() createPaymentDto: CreatePaymentDto) {
         return this.debtsService.createPayment(createPaymentDto);
@@ -35,6 +39,7 @@ export class DebtsController {
     }
 
     @Delete(':id')
+    @Roles(Role.OWNER)
     @ApiOperation({ summary: 'Soft-delete a debt' })
     remove(@Param('id') id: string) {
         return this.debtsService.remove(id);

@@ -7,6 +7,7 @@ datasource db {
 }
 
 enum Role {
+  SUPERADMIN
   OWNER
   MANAGER
   CASHIER
@@ -19,72 +20,117 @@ enum MovementType {
   WASTE
 }
 
+model Business {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  logo        String?
+  isActive    Boolean @default(true)
+
+  users        User[]
+  userAccess   UserBusinessAccess[]
+  warehouses   Warehouse[]
+  pointsOfSale PointOfSale[]
+  products     Product[]
+  currencies   Currency[]
+  customers    Customer[]
+  expenses     Expense[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+}
+
+model UserBusinessAccess {
+  id         String   @id @default(uuid())
+  userId     String
+  businessId String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, businessId])
+}
+
 model Currency {
-  id        String         @id @default(uuid())
-  code      String         @unique // e.g., "USD", "CUP"
-  name      String
-  symbol    String?
-  isBase    Boolean        @default(false)
-  rates     CurrencyRate[]
-  debts     Debt[]
-  payments  DebtPayment[]
-  expenses  Expense[]
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  id         String         @id @default(uuid())
+  businessId String
+  code       String // e.g., "USD", "CUP"
+  name       String
+  symbol     String?
+  isBase     Boolean        @default(false)
+  business   Business       @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  rates      CurrencyRate[]
+  debts      Debt[]
+  payments   DebtPayment[]
+  expenses   Expense[]
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([businessId, code])
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  password  String
-  role      Role      @default(CASHIER)
+  id             String               @id @default(uuid())
+  businessId     String
+  email          String               @unique
+  password       String
+  role           Role                 @default(CASHIER)
   name           String
   phoneNumber    String?
   address        String?
-  identityNumber String?   @unique
+  identityNumber String?              @unique
   posId          String?
-  pointOfSale    PointOfSale? @relation(fields: [posId], references: [id])
+  business       Business             @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessAccess UserBusinessAccess[]
+  pointOfSale    PointOfSale?         @relation(fields: [posId], references: [id])
   deletedAt      DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 }
 
 model Product {
   id              String           @id @default(uuid())
+  businessId      String
   name            String
   description     String?
   category        String?
   unit            String           @default("unit")
   costPrice       Float            @default(0) // Average Cost (WAC)
   sellingPriceCUP Float            @default(0)
-  deletedAt       DateTime?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  business        Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
   warehouseStock  WarehouseStock[]
   posStock        POSStock[]
   movements       StockMovement[]
   saleItems       SaleItem[]
+  deletedAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 model Warehouse {
-  id        String           @id @default(uuid())
-  name      String
-  location  String?
-  stocks    WarehouseStock[]
-  deletedAt DateTime?
-  createdAt DateTime         @default(now())
+  id         String           @id @default(uuid())
+  businessId String
+  name       String
+  location   String?
+  business   Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  stocks     WarehouseStock[]
+  deletedAt  DateTime?
+  createdAt  DateTime         @default(now())
 }
 
 model PointOfSale {
-  id        String     @id @default(uuid())
-  name      String
-  location  String?
+  id          String     @id @default(uuid())
+  businessId  String
+  name        String
+  location    String?
   description String?
-  stocks     POSStock[]
-  sales     Sale[]
-  users     User[]
-  deletedAt DateTime?
-  createdAt DateTime   @default(now())
+  business    Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  stocks      POSStock[]
+  sales       Sale[]
+  users       User[]
+  deletedAt   DateTime?
+  createdAt   DateTime   @default(now())
 }
 
 model WarehouseStock {
@@ -132,13 +178,15 @@ model CurrencyRate {
 }
 
 model Customer {
-  id        String    @id @default(uuid())
-  name      String
-  phone     String?
-  email     String?
-  debts     Debt[]
-  deletedAt DateTime?
-  createdAt DateTime  @default(now())
+  id         String    @id @default(uuid())
+  businessId String
+  name       String
+  phone      String?
+  email      String?
+  business   Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  debts      Debt[]
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
 }
 
 model Debt {
@@ -168,38 +216,40 @@ model DebtPayment {
 }
 
 model Sale {
-  id           String     @id @default(uuid())
+  id           String      @id @default(uuid())
   posId        String
-  totalCUP     Float      @default(0)
-  totalUSD     Float      @default(0)
-  totalMLC     Float      @default(0)
+  totalCUP     Float       @default(0)
+  totalUSD     Float       @default(0)
+  totalMLC     Float       @default(0)
   rateAtMoment Float
   pointOfSale  PointOfSale @relation(fields: [posId], references: [id])
   items        SaleItem[]
   debt         Debt?
   deletedAt    DateTime?
-  createdAt    DateTime   @default(now())
+  createdAt    DateTime    @default(now())
 }
 
 model SaleItem {
-  id           String   @id @default(uuid())
+  id           String  @id @default(uuid())
   saleId       String
   productId    String
   quantity     Float
   price        Float
   costAtMoment Float
-  sale         Sale     @relation(fields: [saleId], references: [id])
-  product      Product  @relation(fields: [productId], references: [id])
+  sale         Sale    @relation(fields: [saleId], references: [id])
+  product      Product @relation(fields: [productId], references: [id])
 }
 
 model Expense {
   id            String    @id @default(uuid())
+  businessId    String
   description   String
   amount        Float
   currencyId    String
   category      String
   isOnatPayment Boolean   @default(false)
+  business      Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  currency      Currency  @relation(fields: [currencyId], references: [id])
   deletedAt     DateTime?
   createdAt     DateTime  @default(now())
-  currency      Currency  @relation(fields: [currencyId], references: [id])
 }

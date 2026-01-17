@@ -83,7 +83,11 @@ export class SalesService {
                 const debtAmount = totalAmount - (paidAmount ?? totalAmount);
 
                 if (debtAmount > 0) {
-                    const dbCurrency = await tx.currency.findUnique({ where: { code: currency } });
+                    // Get businessId from one of the sale items' product
+                    const firstProduct = await tx.product.findUnique({ where: { id: items[0].productId } });
+                    const dbCurrency = await tx.currency.findFirst({
+                        where: { code: currency, businessId: firstProduct?.businessId }
+                    });
                     if (!dbCurrency) throw new BadRequestException(`Currency ${currency} not found`);
 
                     await tx.debt.create({

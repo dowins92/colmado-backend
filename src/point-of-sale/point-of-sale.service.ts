@@ -7,19 +7,22 @@ import { UpdatePointOfSaleDto } from './dto/update-point-of-sale.dto';
 export class PointOfSaleService {
     constructor(private prisma: PrismaService) { }
 
-    async create(createPointOfSaleDto: CreatePointOfSaleDto) {
+    async create(createPointOfSaleDto: CreatePointOfSaleDto, businessId: string) {
         return this.prisma.pointOfSale.create({
-            data: createPointOfSaleDto,
+            data: {
+                ...createPointOfSaleDto,
+                businessId,
+            },
         });
     }
 
-    async findAll() {
+    async findAll(businessId: string) {
         return this.prisma.pointOfSale.findMany({
-            where: { deletedAt: null },
+            where: { deletedAt: null, businessId },
         });
     }
 
-    async findOne(id: string) {
+    async findOne(id: string, businessId: string) {
         const pos = await this.prisma.pointOfSale.findUnique({
             where: { id, deletedAt: null },
             include: {
@@ -35,23 +38,23 @@ export class PointOfSaleService {
             },
         });
 
-        if (!pos) {
+        if (!pos || pos.businessId !== businessId) {
             throw new NotFoundException(`Point of Sale with ID ${id} not found`);
         }
 
         return pos;
     }
 
-    async update(id: string, updatePointOfSaleDto: UpdatePointOfSaleDto) {
-        await this.findOne(id);
+    async update(id: string, updatePointOfSaleDto: UpdatePointOfSaleDto, businessId: string) {
+        await this.findOne(id, businessId);
         return this.prisma.pointOfSale.update({
             where: { id },
             data: updatePointOfSaleDto,
         });
     }
 
-    async remove(id: string) {
-        await this.findOne(id);
+    async remove(id: string, businessId: string) {
+        await this.findOne(id, businessId);
         return this.prisma.pointOfSale.update({
             where: { id },
             data: { deletedAt: new Date() },

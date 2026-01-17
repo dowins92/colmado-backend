@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -15,35 +15,35 @@ export class UsersController {
     @Post()
     @Roles(Role.OWNER)
     @ApiOperation({ summary: 'Create a new user (Owner only)' })
-    create(@Body() createUserDto: CreateUserDto) {
-        return this.usersService.create(createUserDto);
+    create(@Body() createUserDto: CreateUserDto, @Request() req: any) {
+        return this.usersService.create(createUserDto, req.businessId);
     }
 
     @Get()
     @Roles(Role.OWNER)
     @ApiOperation({ summary: 'Get all users (Owner only)' })
-    findAll() {
-        return this.usersService.findAll();
+    findAll(@Request() req: any) {
+        return this.usersService.findAll(req.businessId);
     }
 
     @Get(':id')
     @Roles(Role.OWNER)
     @ApiOperation({ summary: 'Get a user by ID (Owner only)' })
-    findOne(@Param('id') id: string) {
-        return this.usersService.findOne(id);
+    findOne(@Param('id') id: string, @Request() req: any) {
+        return this.usersService.findOne(id, req.businessId);
     }
 
     @Patch(':id')
     @Roles(Role.OWNER)
     @ApiOperation({ summary: 'Update a user (Owner only)' })
-    update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-        return this.usersService.update(id, updateUserDto);
+    update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Request() req: any) {
+        return this.usersService.update(id, updateUserDto, req.businessId);
     }
 
     @Delete(':id')
     @Roles(Role.OWNER)
     @ApiOperation({ summary: 'Delete a user (Owner only)' })
-    remove(@Param('id') id: string) {
-        return this.usersService.remove(id);
+    remove(@Param('id') id: string, @Request() req: any) {
+        return this.usersService.remove(id, req.businessId);
     }
 }

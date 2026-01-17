@@ -7,14 +7,14 @@ import { CreatePaymentDto } from './dto/create-payment.dto';
 export class DebtsService {
     constructor(private prisma: PrismaService) { }
 
-    async create(createDebtDto: CreateDebtDto) {
+    async create(createDebtDto: CreateDebtDto, businessId: string) {
         const { currencyCode, ...data } = createDebtDto;
 
         // Default to CUP if no currencyCode provided
         const code = (currencyCode || 'CUP').toUpperCase();
 
-        const currency = await this.prisma.currency.findUnique({
-            where: { code },
+        const currency = await this.prisma.currency.findFirst({
+            where: { code, businessId },
         });
 
         if (!currency) {
@@ -34,14 +34,18 @@ export class DebtsService {
 
         const debt = await this.prisma.debt.findUnique({
             where: { id: debtId },
+            include: { customer: true }
         });
 
         if (!debt) {
             throw new NotFoundException(`Debt with ID ${debtId} not found`);
         }
 
-        const currency = await this.prisma.currency.findUnique({
-            where: { code: currencyCode.toUpperCase() },
+        const currency = await this.prisma.currency.findFirst({
+            where: {
+                code: currencyCode.toUpperCase(),
+                businessId: debt.customer.businessId
+            },
         });
 
         if (!currency) {

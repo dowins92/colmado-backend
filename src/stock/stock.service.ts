@@ -8,9 +8,20 @@ import { MovementType } from '@prisma/client';
 export class StockService {
     constructor(private prisma: PrismaService) { }
 
-    async entry(dto: StockEntryDto) {
+    async entry(dto: StockEntryDto, businessId: string) {
         const { productId, warehouseId, quantity, totalCost, rate, currencyCode } = dto;
         const costPrice = quantity > 0 ? totalCost / quantity : 0;
+
+        // Verify product and warehouse belong to the same business
+        const product = await this.prisma.product.findUnique({ where: { id: productId } });
+        const warehouse = await this.prisma.warehouse.findUnique({ where: { id: warehouseId } });
+
+        if (!product || product.businessId !== businessId) {
+            throw new NotFoundException('Product not found');
+        }
+        if (!warehouse || warehouse.businessId !== businessId) {
+            throw new NotFoundException('Warehouse not found');
+        }
 
         return this.prisma.$transaction(async (tx) => {
             // Updated Warehouse Stock
@@ -40,8 +51,30 @@ export class StockService {
         });
     }
 
-    async transfer(dto: StockTransferDto) {
+    async transfer(dto: StockTransferDto, businessId: string) {
         const { productId, fromLocationId, toLocationId, quantity, rate } = dto;
+
+        // Verify product belongs to business
+        const product = await this.prisma.product.findUnique({ where: { id: productId } });
+        if (!product || product.businessId !== businessId) {
+            throw new NotFoundException('Product not found');
+        }
+
+        // Verify both locations belong to same business
+        const fromWarehouse = await this.prisma.warehouse.findUnique({ where: { id: fromLocationId } });
+        const fromPOS = await this.prisma.pointOfSale.findUnique({ where: { id: fromLocationId } });
+        const toWarehouse = await this.prisma.warehouse.findUnique({ where: { id: toLocationId } });
+        const toPOS = await this.prisma.pointOfSale.findUnique({ where: { id: toLocationId } });
+
+        const fromLocation = fromWarehouse || fromPOS;
+        const toLocation = toWarehouse || toPOS;
+
+        if (!fromLocation || fromLocation.businessId !== businessId) {
+            throw new NotFoundException('Source location not found');
+        }
+        if (!toLocation || toLocation.businessId !== businessId) {
+            throw new NotFoundException('Destination location not found');
+        }
 
         return this.prisma.$transaction(async (tx) => {
             // 1. Deduct from source (Warehouse or POS)
@@ -83,10 +116,10 @@ export class StockService {
                 });
             }
 
-            // 3. Audit
-            const product = await tx.product.findUnique({ where: { id: productId } });
-            if (!product) throw new NotFoundException(`Product with ID ${productId} not found`);
+            // 3. Get product's current cost
+            const currentProduct = await tx.product.findUnique({ where: { id: productId } });
 
+            // 4. Register Movement
             return tx.stockMovement.create({
                 data: {
                     productId,
@@ -94,23 +127,20 @@ export class StockService {
                     fromLocationId,
                     toLocationId,
                     quantity,
-                    costAtMoment: product.costPrice,
+                    costAtMoment: currentProduct?.costPrice || 0,
                     rateAtMoment: rate,
                 },
             });
         });
     }
 
-    async findAllMovements() {
-        return this.prisma.stockMovement.findMany({
-            include: {
-                product: true,
-            },
-            orderBy: { createdAt: 'desc' },
-        });
-    }
+    async findProductStock(productId: string, businessId: string) {
+        // Verify product belongs to business
+        const product = await this.prisma.product.findUnique({ where: { id: productId } });
+        if (!product || product.businessId !== businessId) {
+            throw new NotFoundException('Product not found');
+        }
 
-    async findProductStock(productId: string) {
         const warehouseStock = await this.prisma.warehouseStock.findMany({
             where: { productId },
             include: { warehouse: true },
@@ -127,9 +157,9 @@ export class StockService {
         };
     }
 
-    async findAvailableStock() {
+    async findAvailableStock(businessId: string) {
         const products = await this.prisma.product.findMany({
-            where: { deletedAt: null },
+            where: { deletedAt: null, businessId },
             include: {
                 warehouseStock: true,
                 posStock: true,

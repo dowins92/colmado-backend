@@ -6,21 +6,28 @@ import { CreateExchangeRateDto, CreateCurrencyDto } from './dto/create-exchange-
 export class CurrenciesService {
     constructor(private prisma: PrismaService) { }
 
-    async createCurrency(createCurrencyDto: CreateCurrencyDto) {
+    async createCurrency(createCurrencyDto: CreateCurrencyDto, businessId: string) {
         return this.prisma.currency.create({
-            data: createCurrencyDto,
+            data: {
+                ...createCurrencyDto,
+                businessId,
+            },
         });
     }
 
-    async getCurrencies() {
+    async getCurrencies(businessId: string) {
         return this.prisma.currency.findMany({
+            where: { businessId },
             orderBy: { code: 'asc' },
         });
     }
 
-    async updateRate(createExchangeRateDto: CreateExchangeRateDto) {
-        const currency = await this.prisma.currency.findUnique({
-            where: { code: createExchangeRateDto.currencyCode },
+    async updateRate(createExchangeRateDto: CreateExchangeRateDto, businessId: string) {
+        const currency = await this.prisma.currency.findFirst({
+            where: {
+                code: createExchangeRateDto.currencyCode,
+                businessId,
+            },
         });
 
         if (!currency) {
@@ -35,8 +42,10 @@ export class CurrenciesService {
         });
     }
 
-    async getLatestRates() {
-        const currencies = await this.prisma.currency.findMany();
+    async getLatestRates(businessId: string) {
+        const currencies = await this.prisma.currency.findMany({
+            where: { businessId },
+        });
         const rates: Record<string, number> = {};
 
         for (const currency of currencies) {

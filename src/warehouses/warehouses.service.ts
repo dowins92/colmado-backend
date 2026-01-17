@@ -7,19 +7,22 @@ import { UpdateWarehouseDto } from './dto/update-warehouse.dto';
 export class WarehousesService {
     constructor(private prisma: PrismaService) { }
 
-    async create(createWarehouseDto: CreateWarehouseDto) {
+    async create(createWarehouseDto: CreateWarehouseDto, businessId: string) {
         return this.prisma.warehouse.create({
-            data: createWarehouseDto,
+            data: {
+                ...createWarehouseDto,
+                businessId,
+            },
         });
     }
 
-    async findAll() {
+    async findAll(businessId: string) {
         return this.prisma.warehouse.findMany({
-            where: { deletedAt: null },
+            where: { deletedAt: null, businessId },
         });
     }
 
-    async findOne(id: string) {
+    async findOne(id: string, businessId: string) {
         const warehouse = await this.prisma.warehouse.findUnique({
             where: { id, deletedAt: null },
             include: {
@@ -31,23 +34,23 @@ export class WarehousesService {
             },
         });
 
-        if (!warehouse) {
+        if (!warehouse || warehouse.businessId !== businessId) {
             throw new NotFoundException(`Warehouse with ID ${id} not found`);
         }
 
         return warehouse;
     }
 
-    async update(id: string, updateWarehouseDto: UpdateWarehouseDto) {
-        await this.findOne(id);
+    async update(id: string, updateWarehouseDto: UpdateWarehouseDto, businessId: string) {
+        await this.findOne(id, businessId);
         return this.prisma.warehouse.update({
             where: { id },
             data: updateWarehouseDto,
         });
     }
 
-    async remove(id: string) {
-        await this.findOne(id);
+    async remove(id: string, businessId: string) {
+        await this.findOne(id, businessId);
         return this.prisma.warehouse.update({
             where: { id },
             data: { deletedAt: new Date() },
