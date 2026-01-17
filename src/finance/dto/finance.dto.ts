@@ -10,9 +10,9 @@ export class ExpenseDto {
     @IsNotEmpty()
     amount: number;
 
-    @IsEnum(Currency)
+    @IsString()
     @IsNotEmpty()
-    currency: Currency;
+    currencyCode: string;
 
     @IsString()
     @IsNotEmpty()
@@ -23,9 +23,9 @@ export class ExpenseDto {
 }
 
 export class CurrencyRateDto {
-    @IsEnum(Currency)
+    @IsString()
     @IsNotEmpty()
-    currency: Currency;
+    currencyCode: string;
 
     @IsNumber()
     @IsNotEmpty()
