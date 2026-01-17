@@ -10,4 +10,9 @@ export class CreatePointOfSaleDto {
     @IsString()
     @IsOptional()
     location?: string;
+
+    @ApiProperty({ required: false })
+    @IsString()
+    @IsOptional()
+    description?: string;
 }

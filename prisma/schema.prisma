@@ -79,6 +79,7 @@ model PointOfSale {
   id        String     @id @default(uuid())
   name      String
   location  String?
+  description String?
   stocks     POSStock[]
   sales     Sale[]
   users     User[]
