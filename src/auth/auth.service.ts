@@ -32,4 +32,8 @@ export class AuthService {
             user,
         };
     }
+
+    logout() {
+        return { message: 'Logged out successfully' };
+    }
 }

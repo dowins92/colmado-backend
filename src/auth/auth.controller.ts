@@ -22,4 +22,11 @@ export class AuthController {
     getProfile(@Request() req: any) {
         return req.user;
     }
+
+    @ApiBearerAuth()
+    @Post('logout')
+    @ApiOperation({ summary: 'Logout user' })
+    logout() {
+        return this.authService.logout();
+    }
 }
