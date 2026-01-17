@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Request, Delete, Param } from '@nestjs/common';
 import { CurrenciesService } from './currencies.service';
 import { CreateExchangeRateDto, CreateCurrencyDto } from './dto/create-exchange-rate.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
@@ -34,10 +34,18 @@ export class CurrenciesController {
     }
 
     @Post('rates')
-    @Roles(Role.OWNER, Role.MANAGER)
+    @Roles(Role.OWNER)
     @ApiOperation({ summary: 'Update an exchange rate' })
     @ApiResponse({ status: 201, description: 'The exchange rate has been successfully updated.' })
     updateRate(@Body() createExchangeRateDto: CreateExchangeRateDto, @Request() req: any) {
         return this.currenciesService.updateRate(createExchangeRateDto, req.businessId);
+    }
+
+    @Delete(':id')
+    @Roles(Role.OWNER)
+    @ApiOperation({ summary: 'Delete a currency' })
+    @ApiResponse({ status: 200, description: 'The currency has been successfully deleted.' })
+    remove(@Param('id') id: string, @Request() req: any) {
+        return this.currenciesService.remove(id, req.businessId);
     }
 }

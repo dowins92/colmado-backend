@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ExpenseDto, CurrencyRateDto } from './dto/finance.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class FinanceService {
@@ -15,10 +16,11 @@ export class FinanceService {
             throw new Error(`Currency ${dto.currencyCode} not found`);
         }
 
-        const { currencyCode, ...data } = dto;
+        const { currencyCode, amount, ...data } = dto;
         return this.prisma.expense.create({
             data: {
                 ...data,
+                amount: new Prisma.Decimal(amount),
                 currencyId: currency.id,
                 businessId,
             },
@@ -73,16 +75,16 @@ export class FinanceService {
         });
 
         const totals = {
-            salesCUP: sales.reduce((acc: number, s: any) => acc + s.totalCUP, 0),
-            salesUSD: sales.reduce((acc: number, s: any) => acc + s.totalUSD, 0),
-            salesMLC: sales.reduce((acc: number, s: any) => acc + s.totalMLC, 0),
-            debtPaymentsCUP: debtPayments.reduce((acc: number, p: any) => acc + (p.currency.isBase ? p.amount : 0), 0),
-            expensesCUP: expenses.reduce((acc: number, e: any) => acc + (e.currency.isBase ? e.amount : 0), 0),
+            salesCUP: sales.reduce((acc, s) => acc.add(s.totalCUP), new Prisma.Decimal(0)),
+            salesUSD: sales.reduce((acc, s) => acc.add(s.totalUSD), new Prisma.Decimal(0)),
+            salesMLC: sales.reduce((acc, s) => acc.add(s.totalMLC), new Prisma.Decimal(0)),
+            debtPaymentsCUP: debtPayments.reduce((acc, p) => acc.add(p.currency.isBase ? p.amount : 0), new Prisma.Decimal(0)),
+            expensesCUP: expenses.reduce((acc, e) => acc.add(e.currency.isBase ? e.amount : 0), new Prisma.Decimal(0)),
         };
 
         return {
             ...totals,
-            cashInHandCUP: totals.salesCUP + totals.debtPaymentsCUP - totals.expensesCUP,
+            cashInHandCUP: totals.salesCUP.add(totals.debtPaymentsCUP).sub(totals.expensesCUP),
         };
     }
 

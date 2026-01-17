@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, Min } from 'class-validator';
+import { IsString, IsOptional, IsNumber, Min, IsArray } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateProductDto {
@@ -9,17 +9,28 @@ export class CreateProductDto {
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
+  sku?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
   description?: string;
 
   @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
-  category?: string;
+  categoryId?: string;
 
-  @ApiProperty({ default: 'unit' })
+  @ApiProperty({ required: false })
   @IsString()
   @IsOptional()
-  unit?: string;
+  imageUrl?: string;
+
+  @ApiProperty({ required: false, type: [String], default: [] })
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  gallery?: string[];
 
   @ApiProperty({ default: 0 })
   @IsNumber()
@@ -31,5 +42,30 @@ export class CreateProductDto {
   @IsNumber()
   @Min(0)
   @IsOptional()
-  sellingPriceCUP?: number;
+  salePrice?: number;
+
+  @ApiProperty({ default: 0 })
+  @IsNumber()
+  @IsOptional()
+  taxRate?: number;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  unitOfMeasure?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  saleUnit?: string;
+
+  @ApiProperty({ default: 1 })
+  @IsNumber()
+  @IsOptional()
+  conversionFactor?: number;
+
+  @ApiProperty({ default: 0 })
+  @IsNumber()
+  @IsOptional()
+  minStock?: number;
 }

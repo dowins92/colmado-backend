@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { BulkSaleDto } from './dto/bulk-sale.dto';
-import { MovementType } from '@prisma/client';
+import { MovementType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class SalesService {
@@ -11,9 +11,9 @@ export class SalesService {
         const { posId, items, currency, rate, customerId, paidAmount } = dto;
 
         return this.prisma.$transaction(async (tx) => {
-            let totalCUP = 0;
-            let totalUSD = 0;
-            let totalMLC = 0;
+            let totalCUP = new Prisma.Decimal(0);
+            let totalUSD = new Prisma.Decimal(0);
+            let totalMLC = new Prisma.Decimal(0);
 
             // 1. Process items and deduct from POS stock
             const saleItemsData = [];
@@ -38,13 +38,13 @@ export class SalesService {
                     data: { quantity: { decrement: item.quantity } },
                 });
 
-                const lineTotal = item.quantity * item.price;
-                if (currency === 'CUP') totalCUP += lineTotal;
-                if (currency === 'USD') totalUSD += lineTotal;
-                if (currency === 'MLC') totalMLC += lineTotal;
+                const lineTotal = new Prisma.Decimal(item.quantity).mul(item.price);
+                if (currency === 'CUP') totalCUP = totalCUP.add(lineTotal);
+                if (currency === 'USD') totalUSD = totalUSD.add(lineTotal);
+                if (currency === 'MLC') totalMLC = totalMLC.add(lineTotal);
 
                 saleItemsData.push({
-                    productId: item.productId,
+                    product: { connect: { id: item.productId } },
                     quantity: item.quantity,
                     price: item.price,
                     costAtMoment: product.costPrice,
@@ -80,9 +80,9 @@ export class SalesService {
             // 3. Handle "El Fiao" (Debt)
             if (customerId) {
                 const totalAmount = currency === 'CUP' ? totalCUP : (currency === 'USD' ? totalUSD : totalMLC);
-                const debtAmount = totalAmount - (paidAmount ?? totalAmount);
+                const debtAmount = totalAmount.sub(paidAmount ?? totalAmount);
 
-                if (debtAmount > 0) {
+                if (debtAmount.gt(0)) {
                     // Get businessId from one of the sale items' product
                     const firstProduct = await tx.product.findUnique({ where: { id: items[0].productId } });
                     const dbCurrency = await tx.currency.findFirst({

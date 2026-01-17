@@ -2,7 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { StockEntryDto } from './dto/stock-entry.dto';
 import { StockTransferDto } from './dto/stock-transfer.dto';
-import { MovementType } from '@prisma/client';
+import { MovementType, Prisma } from '@prisma/client';
 
 @Injectable()
 export class StockService {
@@ -44,7 +44,7 @@ export class StockService {
                     type: MovementType.ENTRY,
                     toLocationId: warehouseId,
                     quantity,
-                    costAtMoment: costPrice,
+                    costAtMoment: new Prisma.Decimal(costPrice),
                     rateAtMoment: rate,
                 },
             });
@@ -127,7 +127,7 @@ export class StockService {
                     fromLocationId,
                     toLocationId,
                     quantity,
-                    costAtMoment: currentProduct?.costPrice || 0,
+                    costAtMoment: currentProduct?.costPrice || new Prisma.Decimal(0),
                     rateAtMoment: rate,
                 },
             });
@@ -161,25 +161,25 @@ export class StockService {
         const products = await this.prisma.product.findMany({
             where: { deletedAt: null, businessId },
             include: {
-                warehouseStock: true,
-                posStock: true,
+                category: true,
+                warehouseStock: {
+                    include: { warehouse: true }
+                },
+                posStock: {
+                    include: { pointOfSale: true }
+                },
             },
         });
 
-        return products
-            .map((product) => {
-                const totalWarehouse = product.warehouseStock.reduce((acc, s) => acc + s.quantity, 0);
-                const totalPOS = product.posStock.reduce((acc, s) => acc + s.quantity, 0);
-                return {
-                    id: product.id,
-                    name: product.name,
-                    category: product.category,
-                    unit: product.unit,
-                    totalStock: totalWarehouse + totalPOS,
-                    warehouseBreakdown: product.warehouseStock,
-                    posBreakdown: product.posStock,
-                };
-            })
-            .filter((p) => p.totalStock > 0);
+        return products.map((product) => {
+            const totalWarehouse = product.warehouseStock.reduce((acc, s) => acc + s.quantity, 0);
+            const totalPOS = product.posStock.reduce((acc, s) => acc + s.quantity, 0);
+            return {
+                ...product,
+                totalStock: totalWarehouse + totalPOS,
+                warehouseBreakdown: product.warehouseStock,
+                posBreakdown: product.posStock,
+            };
+        });
     }
 }

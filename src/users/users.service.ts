@@ -1,14 +1,20 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
     constructor(private prisma: PrismaService) { }
 
-    async create(createUserDto: CreateUserDto, businessId: string) {
+    async create(createUserDto: CreateUserDto, businessId: string, requesterRole: string) {
+        // Role validation: OWNER can only create MANAGER and CASHIER
+        if (requesterRole === Role.OWNER && ![Role.MANAGER, Role.CASHIER].includes(createUserDto.role as any)) {
+            throw new ForbiddenException('Un dueño solamente puede crear gerentes y cajeros');
+        }
+
         const existingUser = await this.prisma.user.findUnique({
             where: { email: createUserDto.email },
         });
@@ -113,8 +119,15 @@ export class UsersService {
         return user;
     }
 
-    async update(id: string, updateUserDto: UpdateUserDto, businessId: string) {
-        await this.findOne(id, businessId);
+    async update(id: string, updateUserDto: UpdateUserDto, businessId: string, requesterRole: string) {
+        const targetUser = await this.findOne(id, businessId);
+
+        // Role validation for update
+        if (updateUserDto.role && requesterRole === Role.OWNER) {
+            if (![Role.MANAGER, Role.CASHIER].includes(updateUserDto.role as any)) {
+                throw new ForbiddenException('Un dueño solamente puede asignar roles de gerente o cajero');
+            }
+        }
 
         const { businessIds, mainBusinessId, ...updateData } = updateUserDto;
         const dataToUpdate: any = { ...updateData };

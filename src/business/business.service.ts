@@ -8,8 +8,23 @@ export class BusinessService {
     constructor(private prisma: PrismaService) { }
 
     async create(createBusinessDto: CreateBusinessDto) {
-        return this.prisma.business.create({
-            data: createBusinessDto,
+        return this.prisma.$transaction(async (tx) => {
+            const business = await tx.business.create({
+                data: createBusinessDto,
+            });
+
+            // Create default CUP base currency for the new business
+            await tx.currency.create({
+                data: {
+                    businessId: business.id,
+                    code: 'CUP',
+                    name: 'Peso Cubano',
+                    symbol: '$',
+                    isBase: true,
+                },
+            });
+
+            return business;
         });
     }
 

@@ -16,7 +16,7 @@ export class UsersController {
     @Roles(Role.OWNER)
     @ApiOperation({ summary: 'Create a new user (Owner only)' })
     create(@Body() createUserDto: CreateUserDto, @Request() req: any) {
-        return this.usersService.create(createUserDto, req.businessId);
+        return this.usersService.create(createUserDto, req.businessId, req.user.role);
     }
 
     @Get()
@@ -37,7 +37,7 @@ export class UsersController {
     @Roles(Role.OWNER)
     @ApiOperation({ summary: 'Update a user (Owner only)' })
     update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Request() req: any) {
-        return this.usersService.update(id, updateUserDto, req.businessId);
+        return this.usersService.update(id, updateUserDto, req.businessId, req.user.role);
     }
 
     @Delete(':id')

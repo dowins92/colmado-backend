@@ -32,6 +32,7 @@ model Business {
   warehouses   Warehouse[]
   pointsOfSale PointOfSale[]
   products     Product[]
+  categories   Category[]
   currencies   Currency[]
   customers    Customer[]
   expenses     Expense[]
@@ -90,22 +91,45 @@ model User {
 }
 
 model Product {
-  id              String           @id @default(uuid())
-  businessId      String
-  name            String
-  description     String?
-  category        String?
-  unit            String           @default("unit")
-  costPrice       Float            @default(0) // Average Cost (WAC)
-  sellingPriceCUP Float            @default(0)
-  business        Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  warehouseStock  WarehouseStock[]
-  posStock        POSStock[]
-  movements       StockMovement[]
-  saleItems       SaleItem[]
-  deletedAt       DateTime?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
+  id               String   @id @default(uuid())
+  businessId       String
+  categoryId       String?
+  sku              String? // Unique per business
+  name             String
+  description      String?
+  imageUrl         String?
+  gallery          String[] @default([])
+  costPrice        Decimal  @default(0) @db.Decimal(15, 4)
+  salePrice        Decimal  @default(0) @db.Decimal(15, 4)
+  taxRate          Float    @default(0)
+  unitOfMeasure    String? // e.g., 'Caja', 'Saco'
+  saleUnit         String? // e.g., 'Unidad', 'Libra'
+  conversionFactor Float    @default(1)
+  minStock         Int      @default(0)
+  business         Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  category         Category? @relation(fields: [categoryId], references: [id])
+  warehouseStock   WarehouseStock[]
+  posStock         POSStock[]
+  movements        StockMovement[]
+  saleItems        SaleItem[]
+  deletedAt        DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([businessId, sku])
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  businessId  String
+  name        String
+  description String?
+  business    Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([businessId, name])
 }
 
 model Warehouse {
@@ -162,7 +186,7 @@ model StockMovement {
   fromLocationId String? // Warehouse ID or POS ID depending on type
   toLocationId   String? // Warehouse ID or POS ID depending on type
   quantity       Float
-  costAtMoment   Float
+  costAtMoment   Decimal      @db.Decimal(15, 4)
   rateAtMoment   Float        @default(1)
   createdAt      DateTime     @default(now())
   product        Product      @relation(fields: [productId], references: [id])
@@ -192,7 +216,7 @@ model Customer {
 model Debt {
   id           String        @id @default(uuid())
   customerId   String
-  amount       Float
+  amount       Decimal       @db.Decimal(15, 4)
   currencyId   String
   rateAtMoment Float
   saleId       String?       @unique
@@ -207,7 +231,7 @@ model Debt {
 model DebtPayment {
   id           String   @id @default(uuid())
   debtId       String
-  amount       Float
+  amount       Decimal  @db.Decimal(15, 4)
   currencyId   String
   rateAtMoment Float
   createdAt    DateTime @default(now())
@@ -218,9 +242,9 @@ model DebtPayment {
 model Sale {
   id           String      @id @default(uuid())
   posId        String
-  totalCUP     Float       @default(0)
-  totalUSD     Float       @default(0)
-  totalMLC     Float       @default(0)
+  totalCUP     Decimal     @default(0) @db.Decimal(15, 4)
+  totalUSD     Decimal     @default(0) @db.Decimal(15, 4)
+  totalMLC     Decimal     @default(0) @db.Decimal(15, 4)
   rateAtMoment Float
   pointOfSale  PointOfSale @relation(fields: [posId], references: [id])
   items        SaleItem[]
@@ -234,8 +258,8 @@ model SaleItem {
   saleId       String
   productId    String
   quantity     Float
-  price        Float
-  costAtMoment Float
+  price        Decimal @db.Decimal(15, 4)
+  costAtMoment Decimal @db.Decimal(15, 4)
   sale         Sale    @relation(fields: [saleId], references: [id])
   product      Product @relation(fields: [productId], references: [id])
 }
@@ -244,7 +268,7 @@ model Expense {
   id            String    @id @default(uuid())
   businessId    String
   description   String
-  amount        Float
+  amount        Decimal   @db.Decimal(15, 4)
   currencyId    String
   category      String
   isOnatPayment Boolean   @default(false)

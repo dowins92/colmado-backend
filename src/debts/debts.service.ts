@@ -2,13 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDebtDto } from './dto/create-debt.dto';
 import { CreatePaymentDto } from './dto/create-payment.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class DebtsService {
     constructor(private prisma: PrismaService) { }
 
     async create(createDebtDto: CreateDebtDto, businessId: string) {
-        const { currencyCode, ...data } = createDebtDto;
+        const { currencyCode, amount, ...rest } = createDebtDto;
 
         // Default to CUP if no currencyCode provided
         const code = (currencyCode || 'CUP').toUpperCase();
@@ -23,14 +24,15 @@ export class DebtsService {
 
         return this.prisma.debt.create({
             data: {
-                ...data,
+                ...rest,
+                amount: new Prisma.Decimal(amount),
                 currencyId: currency.id,
             },
         });
     }
 
     async createPayment(createPaymentDto: CreatePaymentDto) {
-        const { currencyCode, debtId, ...data } = createPaymentDto;
+        const { currencyCode, debtId, amount, ...rest } = createPaymentDto;
 
         const debt = await this.prisma.debt.findUnique({
             where: { id: debtId },
@@ -54,7 +56,8 @@ export class DebtsService {
 
         return this.prisma.debtPayment.create({
             data: {
-                ...data,
+                ...rest,
+                amount: new Prisma.Decimal(amount),
                 debtId,
                 currencyId: currency.id,
             },
