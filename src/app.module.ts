@@ -13,11 +13,12 @@ import { PointOfSaleModule } from './point-of-sale/point-of-sale.module';
 import { CustomersModule } from './customers/customers.module';
 import { DebtsModule } from './debts/debts.module';
 import { UsersModule } from './users/users.module';
+import { CurrenciesModule } from './currencies/currencies.module';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { RolesGuard } from './auth/roles.guard';
 
 @Module({
-  imports: [PrismaModule, AuthModule, ProductsModule, StockModule, SalesModule, FinanceModule, WarehousesModule, PointOfSaleModule, CustomersModule, DebtsModule, UsersModule],
+  imports: [PrismaModule, AuthModule, ProductsModule, StockModule, SalesModule, FinanceModule, WarehousesModule, PointOfSaleModule, CustomersModule, DebtsModule, UsersModule, CurrenciesModule],
   controllers: [AppController],
   providers: [
     AppService,

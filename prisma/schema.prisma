@@ -19,10 +19,18 @@ enum MovementType {
   WASTE
 }
 
-enum Currency {
-  CUP
-  USD
-  MLC
+model Currency {
+  id        String         @id @default(uuid())
+  code      String         @unique // e.g., "USD", "CUP"
+  name      String
+  symbol    String?
+  isBase    Boolean        @default(false)
+  rates     CurrencyRate[]
+  debts     Debt[]
+  payments  DebtPayment[]
+  expenses  Expense[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 }
 
 model User {
@@ -30,8 +38,13 @@ model User {
   email     String    @unique
   password  String
   role      Role      @default(CASHIER)
-  name      String
-  deletedAt DateTime?
+  name           String
+  phoneNumber    String?
+  address        String?
+  identityNumber String?   @unique
+  posId          String?
+  pointOfSale    PointOfSale? @relation(fields: [posId], references: [id])
+  deletedAt      DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -68,6 +81,7 @@ model PointOfSale {
   location  String?
   stocks     POSStock[]
   sales     Sale[]
+  users     User[]
   deletedAt DateTime?
   createdAt DateTime   @default(now())
 }
@@ -108,11 +122,12 @@ model StockMovement {
 }
 
 model CurrencyRate {
-  id        String   @id @default(uuid())
-  currency  Currency
-  rate      Float
-  date      DateTime @default(now())
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  currencyId String
+  rate       Float
+  date       DateTime @default(now())
+  createdAt  DateTime @default(now())
+  currency   Currency @relation(fields: [currencyId], references: [id])
 }
 
 model Customer {
@@ -129,10 +144,11 @@ model Debt {
   id           String        @id @default(uuid())
   customerId   String
   amount       Float
-  currency     Currency      @default(CUP)
+  currencyId   String
   rateAtMoment Float
   saleId       String?       @unique
   customer     Customer      @relation(fields: [customerId], references: [id])
+  currency     Currency      @relation(fields: [currencyId], references: [id])
   sale         Sale?         @relation(fields: [saleId], references: [id])
   payments     DebtPayment[]
   deletedAt    DateTime?
@@ -143,10 +159,11 @@ model DebtPayment {
   id           String   @id @default(uuid())
   debtId       String
   amount       Float
-  currency     Currency @default(CUP)
+  currencyId   String
   rateAtMoment Float
   createdAt    DateTime @default(now())
   debt         Debt     @relation(fields: [debtId], references: [id])
+  currency     Currency @relation(fields: [currencyId], references: [id])
 }
 
 model Sale {
@@ -175,12 +192,13 @@ model SaleItem {
 }
 
 model Expense {
-  id             String    @id @default(uuid())
-  description    String
-  amount         Float
-  currency       Currency  @default(CUP)
-  category       String
-  isOnatPayment  Boolean   @default(false)
-  deletedAt      DateTime?
-  createdAt      DateTime  @default(now())
+  id            String    @id @default(uuid())
+  description   String
+  amount        Float
+  currencyId    String
+  category      String
+  isOnatPayment Boolean   @default(false)
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  currency      Currency  @relation(fields: [currencyId], references: [id])
 }
