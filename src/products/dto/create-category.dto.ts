@@ -7,8 +7,8 @@ export class CreateCategoryDto {
     @IsNotEmpty()
     name: string;
 
-    @ApiProperty({ example: 'Productos líquidos, refrescos, cervezas, etc.', required: false })
-    @IsString()
+    @ApiProperty({ example: 'Productos líquidos, refrescos, cervezas, etc.', required: false, nullable: true })
     @IsOptional()
-    description?: string;
+    @IsString()
+    description?: string | null;
 }
